@@ -1,42 +1,35 @@
 const http = require('http');
+
+const args = process.argv.slice(2);
 const countStudents = require('./3-read_file_async');
 
-const host = 'localhost';
+const DATABASE = args[0];
+
+const hostname = '127.0.0.1';
 const port = 1245;
 
-const requestListener = async (req, res) => {
-  switch (req.url) {
-    case '/students':
-      res.writeHead(200);
-      try {
-        const { students, fields } = await countStudents(process.argv[2]);
-        res.write(`Number of students: ${students.length}\n`);
-        for (const student of students) {
-          fields.add(student.field);
-        }
-        for (const field of fields) {
-          const data = students
-            .filter((s) => s.field === field)
-            .map((s) => s.firstname);
+const app = http.createServer(async (req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/plain');
 
-          res.write(
-	    `Number of students in ${field}: ${data.length}. List: ${data.join(
-	      ', ',
-	    )}\n`,
-	  );
-	}
-        res.end();
-      } catch (err) {
-        res.end('Error: Cannot load the database');
-      }
-      break;
-    default:
-      res.writeHead(200);
-      res.end('Hello Holberton School!');
+  const { url } = req;
+
+  if (url === '/') {
+    res.write('Hello Holberton School!');
+  } else if (url === '/students') {
+    res.write('This is the list of our students\n');
+    try {
+      const students = await countStudents(DATABASE);
+      res.end(`${students.join('\n')}`);
+    } catch (error) {
+      res.end(error.message);
+    }
   }
-};
+  res.statusCode = 404;
+  res.end();
+});
 
-const app = http.createServer(requestListener);
-app.listen(port, host);
-
+app.listen(port, hostname, () => {
+  //   console.log(`Server running at http://${hostname}:${port}/`);
+});
 module.exports = app;
