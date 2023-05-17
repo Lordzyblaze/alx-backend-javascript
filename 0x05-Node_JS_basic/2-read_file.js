@@ -1,50 +1,37 @@
 const fs = require('fs');
 
-function countStudents(filepath) {
-	  try {
-		      const csv = fs.readFileSync(filepath, { encoding: 'utf8' });
-		      const headerArray = csv.split(/\r?\n|\n/);
-		      const headers = headerArray[0].split(',');
+const countStudents = (path) => {
+  if (!fs.existsSync(path)) throw Error('Cannot load the database');
 
-		      // strip headers and convert to list of dicts
-		  //     const dictList = [];
-		  //         const noHeaderArray = headerArray.slice(1);
-		  //             for (let i = 0; i < noHeaderArray.length; i += 1) {
-		  //                   const data = noHeaderArray[i].split(',');
-		  //                         if (data.length === headers.length) {
-		  //                                 const row = {};
-		  //                                         for (let j = 0; j < headers.length; j += 1) {
-		  //                                                   row[headers[j].trim()] = data[j].trim();
-		  //                                                           }
-		  //                                                                   dictList.push(row);
-		  //                                                                         }
-		  //                                                                             }
-		  //
-		  //                                                                                 // count and collect first names of students per field
-		  //                                                                                     let countCS = 0;
-		  //                                                                                         let countSWE = 0;
-		  //                                                                                             const studentsCS = [];
-		  //                                                                                                 const studentsSWE = [];
-		  //
-		  //                                                                                                     dictList.forEach((element) => {
-		  //                                                                                                           if (element.field === 'CS') {
-		  //                                                                                                                   countCS += 1;
-		  //                                                                                                                           studentsCS.push(element.firstname);
-		  //                                                                                                                                 } else if (element.field === 'SWE') {
-		  //                                                                                                                                         countSWE += 1;
-		  //                                                                                                                                                 studentsSWE.push(element.firstname);
-		  //                                                                                                                                                       }
-		  //                                                                                                                                                           });
-		  //
-		  //                                                                                                                                                               const countStudents = countCS + countSWE;
-		  //
-		  //                                                                                                                                                                   // print statements
-		  //                                                                                                                                                                       console.log(`Number of students: ${countStudents}`);
-		  //                                                                                                                                                                           console.log(`Number of students in CS: ${countCS}. List: ${studentsCS.toString().split(',').join(', ')}`);
-		  //                                                                                                                                                                               console.log(`Number of students in SWE: ${countSWE}. List: ${studentsSWE.toString().split(',').join(', ')}`);
-		  //                                                                                                                                                                                 } catch (err) {
-		  //                                                                                                                                                                                     throw new Error('Cannot load the database');
-		  //                                                                                                                                                                                       }
-		  //                                                                                                                                                                                       }
-		  //
-		  //                                                                                                                                                                                       module.exports = countStudents;
+  // Convert CSV file to Object.
+  const fileContent = fs.readFileSync(path, 'utf-8');
+  const students = [];
+  const lines = fileContent.split(/\r?\n/);
+  const keys = lines[0].split(',');
+
+  for (let i = 1; i < lines.length - 1; i += 1) {
+    const values = lines[i].split(',');
+    const object = {};
+
+    for (let j = 0; j < values.length; j += 1) {
+      object[keys[j]] = values[j];
+    }
+    students.push(object);
+  }
+
+  // Display informations.
+  console.log(`Number of students: ${students.length}`);
+  const fields = new Set();
+  for (const student of students) {
+    fields.add(student.field);
+  }
+
+  for (const f of fields) {
+    const data = students.filter((s) => s.field === f).map((s) => s.firstname);
+
+    console.log(
+      `Number of students in ${f}: ${data.length}. List: ${data.join(', ')}`,
+    );
+  }
+};
+module.exports = countStudents;
